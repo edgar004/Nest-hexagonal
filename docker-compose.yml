@@ -1,0 +1,36 @@
+version: '3.7'
+services:
+  dubee_edu:
+    container_name: 'dubee_edu'
+    build:
+      context: .
+      target: production
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - ${API_PORT}:${API_PORT}
+    command: sh -c "npm run migrate && npm run start:prod && npm run seed"
+    env_file:
+      - .env
+    expose:
+      - 8080
+    depends_on:
+      - db
+    links:
+      - db
+    image: dubee_edu:latest
+    logging:
+      driver: json-file
+  db:
+    container_name: dubee_edu_db
+    env_file: config/db/.env
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./config/db/init.sh:/docker-entrypoint-initdb.d/init.sh
+    ports:
+      - "5433:5432"
+    restart: unless-stopped
+    image: postgres:12.2-alpine
+volumes:
+  pgdata:
